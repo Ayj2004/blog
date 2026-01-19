@@ -1,50 +1,43 @@
 <template>
-  <Layout>
-    <div class="container">
-      <!-- 分类筛选 -->
-      <div class="mb-8">
-        <div class="flex flex-wrap gap-2">
-          <button
-            v-for="category in categories"
-            :key="category"
-            class="btn"
-            :class="{
-              'btn-primary': activeCategory === category,
-              'bg-gray-200': activeCategory !== category,
-            }"
-            @click="activeCategory = category"
-          >
-            {{ category }}
-          </button>
-        </div>
+  <Layout title="首页 | VueBlog">
+    <div class="max-w-7xl mx-auto py-8 px-4">
+      <!-- 加载状态 -->
+      <div v-if="loading" class="text-center py-10">
+        <span class="inline-block animate-spin mr-2">🔄</span>
+        加载中...
+      </div>
+
+      <!-- 错误提示 -->
+      <div v-if="error" class="text-center py-10 text-red-500">
+        {{ error }}
       </div>
 
       <!-- 文章列表 -->
-      <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-        <PostCard v-for="post in filteredPosts" :key="post.id" :post="post" />
+      <div
+        v-if="posts.length"
+        class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6"
+      >
+        <PostCard v-for="post in posts" :key="post.id" :post="post" />
+      </div>
+
+      <!-- 空状态 -->
+      <div v-if="!loading && !error && !posts.length" class="text-center py-10">
+        <p class="text-gray-500">暂无文章，快去创建吧～</p>
       </div>
     </div>
   </Layout>
 </template>
 
 <script setup lang="ts">
-import { ref, computed } from "vue";
+import { onMounted } from "vue";
 import Layout from "@/components/Layout.vue";
 import PostCard from "@/components/PostCard.vue";
 import { usePosts } from "@/composables/usePosts";
-import type { Post } from "@/types";
 
-const { posts, filterPostsByCategory } = usePosts();
+const { posts, loading, error, fetchPosts } = usePosts();
 
-// 提取所有分类（去重）
-const categories = ref<string[]>([
-  "全部",
-  ...Array.from(new Set(posts.value.map((p) => p.category))),
-]);
-const activeCategory = ref<string>("全部");
-
-// 筛选后的文章
-const filteredPosts = computed<Post[]>(() => {
-  return filterPostsByCategory(activeCategory.value);
+// 页面挂载时加载文章列表
+onMounted(() => {
+  fetchPosts();
 });
 </script>

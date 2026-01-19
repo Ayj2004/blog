@@ -11,10 +11,10 @@ const router = createRouter({
       component: HomeView,
     },
     {
-      path: "/post/:id",
+      path: "/detail/:id",
       name: "detail",
       component: DetailView,
-      props: true, // 开启 props 传参
+      props: true, // 开启props传参，方便接收文章id
     },
   ],
 });

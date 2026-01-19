@@ -1,124 +1,122 @@
-import { ref } from "vue";
-import type { Post } from "@/types";
-import { format } from "date-fns";
+import { ref, computed } from "vue";
+import type { Post, KVResponse } from "@/types";
 
-// 模拟文章数据（实际项目可替换为接口请求）
-const mockPosts: Post[] = [
-  {
-    id: 1,
-    title: "Vue 3 组合式 API 实战指南",
-    excerpt:
-      "详细讲解 Vue 3 组合式 API 的使用场景和最佳实践，让你的代码更简洁易维护。",
-    content: `
-      # Vue 3 组合式 API 实战指南
-      ## 一、什么是组合式 API
-      组合式 API（Composition API）是 Vue 3 推出的新特性，旨在解决大型组件中逻辑复用和代码组织的问题。
+// 边缘函数基础地址（替换为实际部署的边缘函数域名/IP）
+const EDGE_FUNCTION_BASE_URL = "https://kv-test.4fa2a2a9.er.aliyun-esa.net";
 
-      ## 二、核心 API 使用
-      ### 1. ref 和 reactive
-      ref 用于定义基本类型响应式数据，reactive 用于定义对象类型响应式数据：
-      \`\`\`vue
-      <script setup>
-      import { ref, reactive } from 'vue'
-      const count = ref(0)
-      const user = reactive({ name: '张三', age: 20 })
-      </script>
-      \`\`\`
-
-      ## 三、实战场景
-      组合式 API 特别适合拆分复杂的业务逻辑，比如表单验证、数据请求等。
-    `,
-    cover: "https://picsum.photos/800/400?random=1",
-    category: "前端",
-    createTime: format(new Date("2024-02-01"), "yyyy-MM-dd HH:mm"),
-    author: "前端开发者",
-  },
-  {
-    id: 2,
-    title: "Tailwind CSS 快速上手",
-    excerpt:
-      "从零开始学习 Tailwind CSS，无需编写自定义 CSS 即可快速构建美观的界面。",
-    content: `
-      # Tailwind CSS 快速上手
-      ## 一、安装与配置
-      通过 npm 安装 Tailwind CSS：
-      \`\`\`bash
-      npm install -D tailwindcss postcss autoprefixer
-      npx tailwindcss init -p
-      \`\`\`
-
-      ## 二、核心特性
-      Tailwind CSS 采用原子化 CSS 理念，每个类只对应一个样式，比如：
-      - \`bg-gray-50\`：背景色浅灰
-      - \`text-primary\`：文字主色调
-      - \`px-4\`：水平内边距 16px
-
-      ## 三、响应式设计
-      只需添加屏幕前缀即可实现响应式：
-      \`\`\`html
-      <div class="w-16 md:w-32 lg:w-64">响应式宽度</div>
-      \`\`\`
-    `,
-    cover: "https://picsum.photos/800/400?random=2",
-    category: "CSS",
-    createTime: format(new Date("2024-02-10"), "yyyy-MM-dd HH:mm"),
-    author: "UI 工程师",
-  },
-  {
-    id: 3,
-    title: "Vite 性能优化技巧",
-    excerpt: "掌握 Vite 的核心优化手段，让你的 Vue 项目启动更快、打包更小。",
-    content: `
-      # Vite 性能优化技巧
-      ## 一、依赖预构建
-      Vite 会自动预构建第三方依赖，可通过 \`optimizeDeps\` 配置自定义预构建：
-      \`\`\`ts
-      // vite.config.ts
-      export default defineConfig({
-        optimizeDeps: {
-          include: ['axios', 'lodash']
-        }
-      })
-      \`\`\`
-
-      ## 二、代码分割
-      使用动态导入实现代码分割，减少首屏加载体积：
-      \`\`\`vue
-      <script setup>
-      const loadComponent = async () => {
-        const { default: Component } = await import('./HeavyComponent.vue')
-      }
-      </script>
-      \`\`\`
-
-      ## 三、静态资源处理
-      对图片、字体等静态资源进行压缩，可配合 vite-plugin-imagemin 插件使用。
-    `,
-    cover: "https://picsum.photos/800/400?random=3",
-    category: "构建工具",
-    createTime: format(new Date("2024-02-18"), "yyyy-MM-dd HH:mm"),
-    author: "架构师",
-  },
-];
-
-// 获取所有文章
 export const usePosts = () => {
-  const posts = ref<Post[]>(mockPosts);
+  // 文章列表（响应式）
+  const posts = ref<Post[]>([]);
+  // 加载状态
+  const loading = ref(false);
+  // 错误信息
+  const error = ref("");
 
-  // 根据 ID 获取单篇文章
-  const getPostById = (id: number) => {
-    return posts.value.find((post) => post.id === id) || null;
+  // 1. 获取所有文章列表
+  const fetchPosts = async () => {
+    loading.value = true;
+    error.value = "";
+    try {
+      const response = await fetch(`${EDGE_FUNCTION_BASE_URL}/api/posts`);
+      const result: KVResponse<Post[]> = await response.json();
+      if (result.success) {
+        posts.value = result.data || [];
+      } else {
+        error.value = result.error || "获取文章列表失败";
+      }
+    } catch (e) {
+      error.value = `网络异常：${(e as Error).message}`;
+    } finally {
+      loading.value = false;
+    }
   };
 
-  // 根据分类筛选文章
-  const filterPostsByCategory = (category: string) => {
-    if (category === "全部") return posts.value;
-    return posts.value.filter((post) => post.category === category);
+  // 2. 获取单篇文章详情
+  const fetchPostById = async (id: string): Promise<Post | null> => {
+    loading.value = true;
+    error.value = "";
+    try {
+      const response = await fetch(`${EDGE_FUNCTION_BASE_URL}/api/post/${id}`);
+      const result: KVResponse<Post> = await response.json();
+      if (result.success) {
+        return result.data || null;
+      } else {
+        error.value = result.error || "获取文章详情失败";
+        return null;
+      }
+    } catch (e) {
+      error.value = `网络异常：${(e as Error).message}`;
+      return null;
+    } finally {
+      loading.value = false;
+    }
   };
+
+  // 3. 新增/更新文章
+  const savePost = async (post: Post): Promise<boolean> => {
+    loading.value = true;
+    error.value = "";
+    try {
+      const response = await fetch(`${EDGE_FUNCTION_BASE_URL}/api/post`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(post),
+      });
+      const result: KVResponse = await response.json();
+      if (result.success) {
+        // 重新拉取文章列表
+        await fetchPosts();
+        return true;
+      } else {
+        error.value = result.error || "保存文章失败";
+        return false;
+      }
+    } catch (e) {
+      error.value = `网络异常：${(e as Error).message}`;
+      return false;
+    } finally {
+      loading.value = false;
+    }
+  };
+
+  // 4. 删除文章
+  const deletePost = async (id: string): Promise<boolean> => {
+    loading.value = true;
+    error.value = "";
+    try {
+      const response = await fetch(`${EDGE_FUNCTION_BASE_URL}/api/post/${id}`, {
+        method: "DELETE",
+      });
+      const result: KVResponse = await response.json();
+      if (result.success) {
+        // 重新拉取文章列表
+        await fetchPosts();
+        return true;
+      } else {
+        error.value = result.error || "删除文章失败";
+        return false;
+      }
+    } catch (e) {
+      error.value = `网络异常：${(e as Error).message}`;
+      return false;
+    } finally {
+      loading.value = false;
+    }
+  };
+
+  // 文章总数
+  const postCount = computed(() => posts.value.length);
 
   return {
     posts,
-    getPostById,
-    filterPostsByCategory,
+    loading,
+    error,
+    postCount,
+    fetchPosts,
+    fetchPostById,
+    savePost,
+    deletePost,
   };
 };

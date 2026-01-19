@@ -1,11 +1,17 @@
-// 文章类型定义
+/** 博客文章类型 */
 export interface Post {
-  id: number;
+  id: string;
   title: string;
-  excerpt: string; // 摘要
-  content: string; // 正文
-  cover: string; // 封面图
-  category: string; // 分类
+  cover: string; // 封面图地址
+  content: string; // 文章内容
+  summary: string; // 文章摘要
   createTime: string; // 创建时间
-  author: string; // 作者
+  updateTime: string; // 更新时间
+}
+
+/** KV操作返回结果类型 */
+export interface KVResponse<T = any> {
+  success: boolean;
+  data?: T;
+  error?: string;
 }
