@@ -1,57 +1,53 @@
 <template>
-  <div class="bg-white rounded-lg shadow-md p-6 md:p-8">
-    <div v-if="!post" class="text-center py-10">
-      <p class="text-xl text-gray-500">文章不存在</p>
-      <router-link to="/" class="btn btn-primary mt-4 inline-block"
-        >返回首页</router-link
-      >
+  <div v-if="post" class="post-detail max-w-3xl mx-auto p-4">
+    <h1 class="text-3xl font-bold mb-4">{{ post.title }}</h1>
+    <div class="flex flex-wrap justify-between gap-2 text-gray-500 mb-6">
+      <span>分类：{{ post.category || "未分类" }}</span>
+      <span>作者：{{ post.author || "匿名作者" }}</span>
+      <span>发布时间：{{ post.createTime }}</span>
+      <span>更新时间：{{ post.updateTime }}</span>
     </div>
-    <div v-else>
-      <h1 class="text-3xl md:text-4xl font-bold mb-4">{{ post.title }}</h1>
-      <div class="flex flex-wrap gap-4 mb-6 text-sm text-gray-500">
-        <span>分类：{{ post.category }}</span>
-        <span>发布时间：{{ post.createTime }}</span>
-        <span>作者：{{ post.author }}</span>
-      </div>
-      <img
-        :src="post.cover"
-        alt="文章封面"
-        class="w-full h-64 md:h-96 object-cover rounded-lg mb-8"
-      />
-      <div class="prose max-w-none">
-        <!-- 简单解析 markdown 换行和标题（实际项目可集成 markdown-it） -->
-        <div v-html="formatContent(post.content)"></div>
-      </div>
-      <div class="mt-8">
-        <router-link to="/" class="btn btn-primary">返回首页</router-link>
-      </div>
-    </div>
+    <img
+      :src="post.cover"
+      :alt="post.title"
+      class="w-full h-64 object-cover rounded mb-6"
+    />
+    <div class="prose max-w-none" v-html="post.content"></div>
   </div>
+  <div v-else class="text-center py-10">文章不存在</div>
 </template>
 
 <script setup lang="ts">
+import { ref, onMounted } from "vue";
 import type { Post } from "@/types";
 import { usePosts } from "@/composables/usePosts";
 
+// 修正 props 定义：id 为可选（兼容传入 post 的场景），类型兼容 string/number
 const props = defineProps<{
-  id: number;
+  id?: string | number;
+  post?: Post;
 }>();
 
 const { getPostById } = usePosts();
-// 关键修改：给 post 变量显式添加 Post 类型注解，让 TS 识别到 Post 被使用
-const post: Post | null = getPostById(Number(props.id));
+const post = ref<Post | null>(props.post || null);
 
-// 简单格式化 markdown 内容（仅示例，复杂场景用 markdown-it）
-const formatContent = (content: string) => {
-  return content
-    .replace(/\n/g, "<br>")
-    .replace(/# (.*?)\n/g, '<h1 class="text-2xl font-bold my-4">$1</h1>')
-    .replace(/## (.*?)\n/g, '<h2 class="text-xl font-bold my-3">$1</h2>')
-    .replace(/### (.*?)\n/g, '<h3 class="text-lg font-bold my-2">$1</h3>')
-    .replace(
-      /`{3}([\s\S]*?)`{3}/g,
-      '<pre class="bg-gray-100 p-4 rounded my-3"><code>$1</code></pre>'
-    )
-    .replace(/`(.*?)`/g, '<code class="bg-gray-100 px-1 rounded">$1</code>');
-};
+onMounted(() => {
+  // 仅当未传入 post 且传入 id 时，调用 getPostById
+  if (!post.value && props.id) {
+    const targetPost = getPostById(props.id);
+    post.value = targetPost || null;
+  }
+});
 </script>
+
+<style scoped>
+.post-detail {
+  line-height: 1.8;
+}
+.prose {
+  color: #333;
+}
+.prose p {
+  margin-bottom: 1rem;
+}
+</style>

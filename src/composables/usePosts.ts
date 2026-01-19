@@ -1,20 +1,18 @@
 import { ref, computed } from "vue";
 import type { Post, KVResponse } from "@/types";
 
-// 边缘函数基础地址（抽离为常量，便于环境区分）
 const EDGE_FUNCTION_BASE_URL = "https://kv-test.4fa2a2a9.er.aliyun-esa.net";
 
 export const usePosts = () => {
-  // 文章列表（响应式）
   const posts = ref<Post[]>([]);
-  // 加载状态（细化：不同操作可复用，避免全局loading冲突）
   const loading = ref(false);
-  // 错误信息（响应式）
   const error = ref("");
 
-  /**
-   * 重置错误信息（内部工具方法）
-   */
+  // 新增：补充缺失的 getPostById 方法（解决 TS2339）
+  const getPostById = (id: string | number): Post | undefined => {
+    return posts.value.find((post) => post.id === id);
+  };
+
   const resetError = () => {
     error.value = "";
   };
@@ -25,12 +23,9 @@ export const usePosts = () => {
     resetError();
     try {
       const response = await fetch(`${EDGE_FUNCTION_BASE_URL}/api/posts`);
-
-      // 校验响应状态码（非2xx直接抛错）
       if (!response.ok) {
         throw new Error(`请求失败：${response.status} ${response.statusText}`);
       }
-
       const result: KVResponse<Post[]> = await response.json();
       if (result.success) {
         posts.value = result.data || [];
@@ -49,9 +44,8 @@ export const usePosts = () => {
     }
   };
 
-  // 2. 获取单篇文章详情（独立loading逻辑，避免影响列表loading）
+  // 2. 获取单篇文章详情（修复：返回 Post | undefined，解决 null/undefined 不兼容）
   const fetchPostById = async (id: string): Promise<KVResponse<Post>> => {
-    // 入参校验
     if (!id || typeof id !== "string") {
       const errMsg = "文章ID格式错误（必须为非空字符串）";
       error.value = errMsg;
@@ -62,14 +56,13 @@ export const usePosts = () => {
     resetError();
     try {
       const response = await fetch(`${EDGE_FUNCTION_BASE_URL}/api/post/${id}`);
-
       if (!response.ok) {
         throw new Error(`请求失败：${response.status} ${response.statusText}`);
       }
-
       const result: KVResponse<Post> = await response.json();
       if (result.success) {
-        const post = result.data || null;
+        // 修复：将 null 转为 undefined，匹配 Post | undefined 类型
+        const post = result.data ?? undefined;
         return { success: true, data: post };
       } else {
         const errMsg = result.error || "获取文章详情失败";
@@ -85,9 +78,8 @@ export const usePosts = () => {
     }
   };
 
-  // 3. 新增/更新文章（区分新增和更新的语义，保留统一入口）
+  // 3. 新增/更新文章
   const savePost = async (post: Post): Promise<KVResponse> => {
-    // 入参校验（核心字段非空检查）
     const requiredFields = [
       "id",
       "title",
@@ -112,14 +104,11 @@ export const usePosts = () => {
         },
         body: JSON.stringify(post),
       });
-
       if (!response.ok) {
         throw new Error(`请求失败：${response.status} ${response.statusText}`);
       }
-
       const result: KVResponse = await response.json();
       if (result.success) {
-        // 重新拉取列表，保证数据最新
         await fetchPosts();
         return { success: true };
       } else {
@@ -138,7 +127,6 @@ export const usePosts = () => {
 
   // 4. 删除文章
   const deletePost = async (id: string): Promise<KVResponse> => {
-    // 入参校验
     if (!id || typeof id !== "string") {
       const errMsg = "文章ID格式错误（必须为非空字符串）";
       error.value = errMsg;
@@ -151,11 +139,9 @@ export const usePosts = () => {
       const response = await fetch(`${EDGE_FUNCTION_BASE_URL}/api/post/${id}`, {
         method: "DELETE",
       });
-
       if (!response.ok) {
         throw new Error(`请求失败：${response.status} ${response.statusText}`);
       }
-
       const result: KVResponse = await response.json();
       if (result.success) {
         await fetchPosts();
@@ -174,10 +160,8 @@ export const usePosts = () => {
     }
   };
 
-  // 文章总数
   const postCount = computed(() => posts.value.length);
 
-  // 重置所有状态（可选，用于页面重置）
   const resetState = () => {
     posts.value = [];
     loading.value = false;
@@ -185,16 +169,15 @@ export const usePosts = () => {
   };
 
   return {
-    // 状态
     posts,
     loading,
     error,
     postCount,
-    // 方法
     fetchPosts,
     fetchPostById,
+    getPostById, // 导出新增的 getPostById 方法
     savePost,
     deletePost,
-    resetState, // 新增：状态重置
+    resetState,
   };
 };
