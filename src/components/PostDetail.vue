@@ -38,7 +38,8 @@ const props = defineProps<{
 }>();
 
 const { getPostById } = usePosts();
-const post = getPostById(Number(props.id));
+// 关键修改：给 post 变量显式添加 Post 类型注解，让 TS 识别到 Post 被使用
+const post: Post | null = getPostById(Number(props.id));
 
 // 简单格式化 markdown 内容（仅示例，复杂场景用 markdown-it）
 const formatContent = (content: string) => {
