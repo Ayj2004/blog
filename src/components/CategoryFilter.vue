@@ -26,9 +26,13 @@
         color: activeCategory === category ? '#ffffff' : '#333333',
         '--hover-bg': getRandomColor(category, 'hover'),
       }"
-      @mouseenter="handleMouseEnter"
-      @mouseleave="(e) => handleMouseLeave(e, category)"
+      @click="handleSelectCategory(category)"
+      <!--
+      恢复点击事件
+      --
     >
+      @mouseenter="handleMouseEnter" @mouseleave="(e) => handleMouseLeave(e,
+      category)" >
       {{ category }}
     </button>
   </div>
@@ -63,13 +67,11 @@ const handleSelectCategory = (category: string) => {
 };
 
 /**
- * 修复TS报错：处理鼠标进入事件（移除泛型，改用基础MouseEvent + 精准断言）
+ * 处理鼠标进入事件（兼容非泛型MouseEvent）
  */
 const handleMouseEnter = (e: MouseEvent) => {
-  // 1. 先断言e.target非null，再断言为HTMLButtonElement（兼容非泛型MouseEvent）
-  if (!e.target) return; // 兜底：排除null情况
+  if (!e.target) return;
   const target = e.target as HTMLButtonElement;
-  // 2. 使用全局window.getComputedStyle
   const hoverBg = window
     .getComputedStyle(target)
     .getPropertyValue("--hover-bg");
@@ -77,41 +79,40 @@ const handleMouseEnter = (e: MouseEvent) => {
 };
 
 /**
- * 修复TS报错：处理鼠标离开事件（移除泛型，增加null兜底）
+ * 处理鼠标离开事件
  */
 const handleMouseLeave = (e: MouseEvent, category: string) => {
-  if (!e.target) return; // 兜底：排除null情况
+  if (!e.target) return;
   const target = e.target as HTMLButtonElement;
-  // 仅当未选中时恢复浅色系背景
-  if (activeCategory !== category) {
-    target.style.backgroundColor = getRandomColor(category, "light");
-  }
+  // 选中状态保留深色，未选中恢复浅色
+  target.style.backgroundColor =
+    activeCategory === category
+      ? getRandomColor(category, "dark")
+      : getRandomColor(category, "light");
 };
 
 /**
  * 基于分类名生成固定的随机颜色（同一分类始终返回相同颜色）
- * @param category 分类名称
- * @param type 颜色类型：light(未选中浅色) | dark(选中深色) | hover(hover浅深色)
- * @returns 十六进制颜色值
  */
 const getRandomColor = (
   category: string,
   type: "light" | "dark" | "hover"
 ): string => {
-  // 步骤1：基于分类名字符串生成固定哈希值
+  // 生成固定哈希值（保证同一分类颜色不变）
   const hash = category.split("").reduce((acc, char) => {
     acc = (acc << 5) - acc + char.charCodeAt(0);
-    return acc & acc; // 转为32位整数
+    return acc & acc;
   }, 0);
 
-  // 步骤2：HSL模式生成颜色（视觉更友好）
-  const hue = hash % 360; // 色相0-360
-  const saturation = 70; // 饱和度70%
+  const hue = hash % 360; // 固定色相
+  const saturation = 70; // 固定饱和度
+  // 不同状态的亮度
+  const lightnessMap = {
+    light: 90,
+    dark: 40,
+    hover: 80,
+  };
 
-  let lightness = 90; // 未选中-浅色系
-  if (type === "dark") lightness = 40; // 选中-深色系
-  if (type === "hover") lightness = 80; // hover-略深的浅色系
-
-  return `hsl(${hue}, ${saturation}%, ${lightness}%)`;
+  return `hsl(${hue}, ${saturation}%, ${lightnessMap[type]}%)`;
 };
 </script>
