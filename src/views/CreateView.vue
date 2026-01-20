@@ -2,103 +2,93 @@
   <Layout title="创建文章 | VueBlog">
     <div class="max-w-3xl mx-auto p-4">
       <h2 class="text-2xl font-bold mb-6">创建新文章</h2>
-      <!-- 表单 -->
-      <form @submit.prevent="handleSubmit" class="space-y-4">
-        <div>
-          <label class="block text-gray-700 mb-2 font-medium"
-            >标题 <span class="text-red-500">*</span></label
-          >
+      <!-- 文章表单 -->
+      <form @submit.prevent="handleSubmit">
+        <div class="mb-4">
+          <label class="block text-gray-700 mb-2">标题</label>
           <input
             v-model="postForm.title"
             type="text"
-            class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary/50"
+            class="w-full px-3 py-2 border rounded"
             placeholder="请输入文章标题"
             required
           />
         </div>
-        <div>
-          <label class="block text-gray-700 mb-2 font-medium"
-            >封面图地址 <span class="text-red-500">*</span></label
-          >
-          <input
-            v-model="postForm.cover"
-            type="url"
-            class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary/50"
-            placeholder="请输入封面图URL（如：https://picsum.photos/1440/1080）"
-            required
-          />
+
+        <!-- 新增：随机封面预览（无需手动输入） -->
+        <div class="mb-4">
+          <label class="block text-gray-700 mb-2">封面图（随机生成）</label>
+          <div class="flex items-center gap-4">
+            <img
+              :src="postForm.cover"
+              alt="随机封面"
+              class="w-32 h-20 object-cover rounded border"
+            />
+            <button
+              type="button"
+              class="px-3 py-1 border rounded text-sm hover:bg-gray-100"
+              @click="generateRandomCover"
+            >
+              换一张
+            </button>
+          </div>
         </div>
-        <div>
-          <label class="block text-gray-700 mb-2 font-medium"
-            >内容 <span class="text-red-500">*</span></label
-          >
+
+        <div class="mb-4">
+          <label class="block text-gray-700 mb-2">内容</label>
           <textarea
             v-model="postForm.content"
-            class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary/50 h-60"
+            class="w-full px-3 py-2 border rounded h-40"
             placeholder="请输入文章内容"
             required
           ></textarea>
         </div>
-        <div>
-          <label class="block text-gray-700 mb-2 font-medium"
-            >分类（可选）</label
-          >
-          <input
-            v-model="postForm.category"
-            type="text"
-            class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary/50"
-            placeholder="请输入文章分类"
-          />
-        </div>
-        <button
-          type="submit"
-          class="px-6 py-2 bg-primary text-white rounded-md hover:bg-primary/90 transition-colors"
-          :disabled="loading"
-        >
-          <span v-if="loading" class="inline-block animate-spin mr-2">🔄</span>
-          保存文章
-        </button>
+        <button type="submit" class="btn btn-primary">保存文章</button>
       </form>
     </div>
   </Layout>
 </template>
 
 <script setup lang="ts">
-import { ref } from "vue";
+import { ref, onMounted } from "vue";
 import { useRouter } from "vue-router";
 import type { Post } from "@/types";
 import Layout from "@/components/Layout.vue";
 import { usePosts } from "@/composables/usePosts";
 
 const router = useRouter();
-const { loading, savePost } = usePosts();
+const { savePost } = usePosts();
+
+// 生成随机封面图的方法
+const generateRandomCover = () => {
+  // 使用picsum.photos生成随机图片（尺寸：800x400，随机id）
+  const randomId = Math.floor(Math.random() * 1000);
+  return `https://picsum.photos/800/400?random=${randomId}`;
+};
 
 // 表单数据
 const postForm = ref<Partial<Post>>({
-  id: Date.now().toString(), // 时间戳生成唯一ID
+  id: Date.now().toString(), // 临时用时间戳生成ID
   title: "",
-  cover: "",
+  cover: "", // 初始为空，挂载后自动生成
   content: "",
   summary: "",
   createTime: new Date().toLocaleString(),
   updateTime: new Date().toLocaleString(),
-  category: "",
-  author: "匿名作者",
+});
+
+// 页面挂载时自动生成随机封面
+onMounted(() => {
+  postForm.value.cover = generateRandomCover();
 });
 
 // 提交表单
 const handleSubmit = async () => {
-  // 基础校验
-  if (
-    !postForm.value.title ||
-    !postForm.value.cover ||
-    !postForm.value.content
-  ) {
-    alert("标题、封面、内容为必填项！");
+  if (!postForm.value.title || !postForm.value.content) {
+    alert("标题、内容为必填项！");
     return;
   }
-
-  // 生成摘要（内容前100字）
+  // 补充摘要（取内容前100字）
   postForm.value.summary = postForm.value.content.slice(0, 100);
 
   // 调用保存接口
@@ -107,7 +97,7 @@ const handleSubmit = async () => {
     alert("文章创建成功！");
     router.push("/"); // 返回首页
   } else {
-    alert(`创建失败：${result.error || "未知错误"}`);
+    alert(`创建失败：${result.error}`);
   }
 };
 </script>
