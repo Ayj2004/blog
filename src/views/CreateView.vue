@@ -15,7 +15,31 @@
           />
         </div>
 
-        <!-- 新增：随机封面预览（无需手动输入） -->
+        <!-- 作者输入框 -->
+        <div class="mb-4">
+          <label class="block text-gray-700 mb-2">作者</label>
+          <input
+            v-model="postForm.author"
+            type="text"
+            class="w-full px-3 py-2 border rounded"
+            placeholder="请输入作者名称"
+            required
+          />
+        </div>
+
+        <!-- 分类输入框 -->
+        <div class="mb-4">
+          <label class="block text-gray-700 mb-2">分类</label>
+          <input
+            v-model="postForm.category"
+            type="text"
+            class="w-full px-3 py-2 border rounded"
+            placeholder="请输入文章分类（如：技术、生活、随笔）"
+            required
+          />
+        </div>
+
+        <!-- 随机封面预览（无需手动输入） -->
         <div class="mb-4">
           <label class="block text-gray-700 mb-2">封面图（随机生成）</label>
           <div class="flex items-center gap-4">
@@ -63,13 +87,15 @@ const { savePost } = usePosts();
 const generateRandomCover = () => {
   // 使用picsum.photos生成随机图片（尺寸：800x400，随机id）
   const randomId = Math.floor(Math.random() * 1000);
-  return `https://picsum.photos/800/400?random=${randomId}`;
+  postForm.value.cover = `https://picsum.photos/800/400?random=${randomId}`;
 };
 
 // 表单数据
 const postForm = ref<Partial<Post>>({
   id: Date.now().toString(), // 临时用时间戳生成ID
   title: "",
+  author: "", // 作者（手动填写）
+  category: "", // 分类（手动填写）
   cover: "", // 初始为空，挂载后自动生成
   content: "",
   summary: "",
@@ -79,13 +105,19 @@ const postForm = ref<Partial<Post>>({
 
 // 页面挂载时自动生成随机封面
 onMounted(() => {
-  postForm.value.cover = generateRandomCover();
+  generateRandomCover();
 });
 
 // 提交表单
 const handleSubmit = async () => {
-  if (!postForm.value.title || !postForm.value.content) {
-    alert("标题、内容为必填项！");
+  // 校验必填项：标题、作者、分类、内容
+  if (
+    !postForm.value.title ||
+    !postForm.value.author ||
+    !postForm.value.category ||
+    !postForm.value.content
+  ) {
+    alert("标题、作者、分类、内容为必填项！");
     return;
   }
   // 补充摘要（取内容前100字）
