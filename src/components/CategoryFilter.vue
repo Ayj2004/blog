@@ -35,7 +35,7 @@
 </template>
 
 <script setup lang="ts">
-import type { PropType } from "vue"; // 仅保留必要的vue类型导入
+import type { PropType } from "vue";
 
 // 定义Props
 const props = defineProps({
@@ -63,12 +63,13 @@ const handleSelectCategory = (category: string) => {
 };
 
 /**
- * 修复TS报错：处理鼠标进入事件（使用全局MouseEvent，而非vue导出的）
+ * 修复TS报错：处理鼠标进入事件（移除泛型，改用基础MouseEvent + 精准断言）
  */
-const handleMouseEnter = (e: MouseEvent<HTMLButtonElement>) => {
-  // 断言target是HTMLButtonElement，排除null
+const handleMouseEnter = (e: MouseEvent) => {
+  // 1. 先断言e.target非null，再断言为HTMLButtonElement（兼容非泛型MouseEvent）
+  if (!e.target) return; // 兜底：排除null情况
   const target = e.target as HTMLButtonElement;
-  // 使用全局window.getComputedStyle
+  // 2. 使用全局window.getComputedStyle
   const hoverBg = window
     .getComputedStyle(target)
     .getPropertyValue("--hover-bg");
@@ -76,12 +77,10 @@ const handleMouseEnter = (e: MouseEvent<HTMLButtonElement>) => {
 };
 
 /**
- * 修复TS报错：处理鼠标离开事件
+ * 修复TS报错：处理鼠标离开事件（移除泛型，增加null兜底）
  */
-const handleMouseLeave = (
-  e: MouseEvent<HTMLButtonElement>,
-  category: string
-) => {
+const handleMouseLeave = (e: MouseEvent, category: string) => {
+  if (!e.target) return; // 兜底：排除null情况
   const target = e.target as HTMLButtonElement;
   // 仅当未选中时恢复浅色系背景
   if (activeCategory !== category) {
