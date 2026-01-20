@@ -1,6 +1,6 @@
 <template>
   <div class="mb-8 flex flex-wrap gap-2">
-    <!-- 全部文章按钮（更大尺寸） -->
+    <!-- 全部文章按钮 -->
     <button
       class="px-6 py-3 rounded-md transition-colors text-base"
       :class="[
@@ -13,7 +13,7 @@
       全部文章
     </button>
 
-    <!-- 动态渲染分类标签（更小尺寸 + 随机颜色） -->
+    <!-- 动态分类按钮：修复事件绑定写法，让TS识别到函数调用 -->
     <button
       v-for="category in categories"
       :key="category"
@@ -28,11 +28,11 @@
       }"
       @click="handleSelectCategory(category)"
       <!--
-      恢复点击事件
+      修复：将事件处理函数直接绑定，避免TS误判未调用
       --
     >
-      @mouseenter="handleMouseEnter" @mouseleave="(e) => handleMouseLeave(e,
-      category)" >
+      @mouseenter="(e) => handleMouseEnter(e)" @mouseleave="(e) =>
+      handleMouseLeave(e, category)" >
       {{ category }}
     </button>
   </div>
@@ -67,9 +67,9 @@ const handleSelectCategory = (category: string) => {
 };
 
 /**
- * 处理鼠标进入事件（兼容非泛型MouseEvent）
+ * 显式标注函数类型，消除TS误判
  */
-const handleMouseEnter = (e: MouseEvent) => {
+const handleMouseEnter: (e: MouseEvent) => void = (e) => {
   if (!e.target) return;
   const target = e.target as HTMLButtonElement;
   const hoverBg = window
@@ -79,12 +79,14 @@ const handleMouseEnter = (e: MouseEvent) => {
 };
 
 /**
- * 处理鼠标离开事件
+ * 显式标注函数类型，消除TS误判
  */
-const handleMouseLeave = (e: MouseEvent, category: string) => {
+const handleMouseLeave: (e: MouseEvent, category: string) => void = (
+  e,
+  category
+) => {
   if (!e.target) return;
   const target = e.target as HTMLButtonElement;
-  // 选中状态保留深色，未选中恢复浅色
   target.style.backgroundColor =
     activeCategory === category
       ? getRandomColor(category, "dark")
@@ -92,21 +94,19 @@ const handleMouseLeave = (e: MouseEvent, category: string) => {
 };
 
 /**
- * 基于分类名生成固定的随机颜色（同一分类始终返回相同颜色）
+ * 基于分类名生成固定的随机颜色
  */
 const getRandomColor = (
   category: string,
   type: "light" | "dark" | "hover"
 ): string => {
-  // 生成固定哈希值（保证同一分类颜色不变）
   const hash = category.split("").reduce((acc, char) => {
     acc = (acc << 5) - acc + char.charCodeAt(0);
     return acc & acc;
   }, 0);
 
-  const hue = hash % 360; // 固定色相
-  const saturation = 70; // 固定饱和度
-  // 不同状态的亮度
+  const hue = hash % 360;
+  const saturation = 70;
   const lightnessMap = {
     light: 90,
     dark: 40,
