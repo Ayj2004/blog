@@ -1,5 +1,5 @@
 <template>
-  <Layout title="首页 | VueBlog">
+  <Layout title="首页 | 云栈博客 - 简约轻量的 Vue 博客系统">
     <div class="max-w-7xl mx-auto py-8 px-4">
       <!-- 加载状态 -->
       <div v-if="loading" class="text-center py-10">
