@@ -1,6 +1,7 @@
 import { ref, computed } from "vue";
 import type { Post, KVResponse } from "@/types";
 
+// 边缘函数地址（替换为你的实际地址）
 const EDGE_FUNCTION_BASE_URL = "https://kv-test.4fa2a2a9.er.aliyun-esa.net";
 
 export const usePosts = () => {
@@ -8,11 +9,12 @@ export const usePosts = () => {
   const loading = ref(false);
   const error = ref("");
 
-  // 新增：补充缺失的 getPostById 方法（解决 TS2339）
+  // 根据ID查找本地文章
   const getPostById = (id: string | number): Post | undefined => {
     return posts.value.find((post) => post.id === id);
   };
 
+  // 重置错误信息
   const resetError = () => {
     error.value = "";
   };
@@ -44,7 +46,7 @@ export const usePosts = () => {
     }
   };
 
-  // 2. 获取单篇文章详情（修复：返回 Post | undefined，解决 null/undefined 不兼容）
+  // 2. 获取单篇文章详情
   const fetchPostById = async (id: string): Promise<KVResponse<Post>> => {
     if (!id || typeof id !== "string") {
       const errMsg = "文章ID格式错误（必须为非空字符串）";
@@ -61,7 +63,6 @@ export const usePosts = () => {
       }
       const result: KVResponse<Post> = await response.json();
       if (result.success) {
-        // 修复：将 null 转为 undefined，匹配 Post | undefined 类型
         const post = result.data ?? undefined;
         return { success: true, data: post };
       } else {
@@ -109,7 +110,7 @@ export const usePosts = () => {
       }
       const result: KVResponse = await response.json();
       if (result.success) {
-        await fetchPosts();
+        await fetchPosts(); // 重新拉取列表
         return { success: true };
       } else {
         const errMsg = result.error || "保存文章失败";
@@ -125,7 +126,7 @@ export const usePosts = () => {
     }
   };
 
-  // 4. 删除文章
+  // 4. 删除文章（可选扩展）
   const deletePost = async (id: string): Promise<KVResponse> => {
     if (!id || typeof id !== "string") {
       const errMsg = "文章ID格式错误（必须为非空字符串）";
@@ -144,7 +145,7 @@ export const usePosts = () => {
       }
       const result: KVResponse = await response.json();
       if (result.success) {
-        await fetchPosts();
+        await fetchPosts(); // 重新拉取列表
         return { success: true };
       } else {
         const errMsg = result.error || "删除文章失败";
@@ -160,8 +161,10 @@ export const usePosts = () => {
     }
   };
 
+  // 文章数量
   const postCount = computed(() => posts.value.length);
 
+  // 重置状态
   const resetState = () => {
     posts.value = [];
     loading.value = false;
@@ -175,7 +178,7 @@ export const usePosts = () => {
     postCount,
     fetchPosts,
     fetchPostById,
-    getPostById, // 导出新增的 getPostById 方法
+    getPostById,
     savePost,
     deletePost,
     resetState,

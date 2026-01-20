@@ -17,10 +17,17 @@
         v-if="posts.length"
         class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6"
       >
-        <PostCard v-for="post in posts" :key="post.id" :post="post" />
+        <router-link
+          v-for="post in posts"
+          :key="post.id"
+          :to="{ name: 'detail', params: { id: post.id } }"
+          class="block"
+        >
+          <PostCard :post="post" />
+        </router-link>
       </div>
 
-      <!-- 空状态：新增创建按钮 -->
+      <!-- 空状态 -->
       <div v-if="!loading && !error && !posts.length" class="text-center py-10">
         <p class="text-gray-500 mb-4">暂无文章，快去创建吧～</p>
         <CreatePostBtn />
@@ -33,7 +40,7 @@
 import { onMounted } from "vue";
 import Layout from "@/components/Layout.vue";
 import PostCard from "@/components/PostCard.vue";
-import CreatePostBtn from "@/components/CreatePostBtn.vue"; // 引入按钮组件
+import CreatePostBtn from "@/components/CreatePostBtn.vue";
 import { usePosts } from "@/composables/usePosts";
 
 const { posts, loading, error, fetchPosts } = usePosts();

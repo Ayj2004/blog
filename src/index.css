@@ -2,16 +2,33 @@
 @tailwind components;
 @tailwind utilities;
 
-/* 全局通用样式 */
+/* 自定义主题变量 */
+:root {
+  --primary: #3b82f6; /* 蓝色主题 */
+}
+
+/* 全局样式 */
 body {
-  @apply bg-gray-50 text-dark;
+  @apply bg-gray-50 text-gray-800;
 }
-.container {
-  @apply max-w-6xl mx-auto px-4 sm:px-6 lg:px-8;
+
+.text-primary {
+  color: var(--primary);
 }
-.btn {
-  @apply px-4 py-2 rounded-md transition-colors;
+
+.bg-primary {
+  background-color: var(--primary);
 }
-.btn-primary {
-  @apply bg-primary text-white hover:bg-primary/90;
+
+.animate-spin {
+  animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
 }

@@ -1,5 +1,8 @@
 <template>
-  <button class="btn btn-primary mt-4" @click="handleCreatePost">
+  <button
+    class="px-6 py-2 bg-primary text-white rounded-md hover:bg-primary/90 transition-colors"
+    @click="handleCreatePost"
+  >
     创建新文章
   </button>
 </template>
@@ -9,9 +12,8 @@ import { useRouter } from "vue-router";
 
 const router = useRouter();
 
-// 点击事件：可根据需求跳转至创建页面或打开弹窗
+// 跳转至创建页面
 const handleCreatePost = () => {
-  // 跳转至创建文章页面
   router.push({ name: "create" });
 };
 </script>
