@@ -22,6 +22,14 @@
           >
             创建文章
           </router-link>
+          <!-- 编辑页高亮（可选，因为编辑页是动态路由，这里仅做辅助） -->
+          <router-link
+            v-if="$route.name === 'edit'"
+            to=""
+            class="text-primary font-medium cursor-default"
+          >
+            编辑文章
+          </router-link>
         </div>
       </div>
     </div>

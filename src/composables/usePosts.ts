@@ -85,7 +85,7 @@ export const usePosts = () => {
     }
   };
 
-  // 3. 新增/更新文章
+  // 3. 新增/更新文章（复用POST接口，后端已兼容更新逻辑）
   const savePost = async (post: Post): Promise<KVResponse> => {
     const requiredFields = [
       "id",
@@ -132,7 +132,15 @@ export const usePosts = () => {
     }
   };
 
-  // 4. 删除文章（可选扩展）
+  // 3.1 单独的更新文章方法（语义化封装）
+  const updatePost = async (post: Post): Promise<KVResponse> => {
+    // 强制更新updateTime
+    post.updateTime = new Date().toLocaleString();
+    // 复用savePost（后端POST接口已兼容更新逻辑）
+    return await savePost(post);
+  };
+
+  // 4. 删除文章
   const deletePost = async (id: string): Promise<KVResponse> => {
     if (!id || typeof id !== "string") {
       const errMsg = "文章ID格式错误（必须为非空字符串）";
@@ -186,6 +194,7 @@ export const usePosts = () => {
     fetchPostById,
     getPostById,
     savePost,
+    updatePost, // 新增更新方法
     deletePost,
     resetState,
   };
