@@ -94,7 +94,7 @@ const EDGE_FUNCTION_BASE_URL = "https://kv-test.4fa2a2a9.er.aliyun-esa.net";
 ## ⚠️ 声明
 
 本项目由阿里云 ESA 提供加速、计算和保护
-![阿里云ESA](./src/assets/aliyun.png)
+![阿里云ESA](https://github.com/Ayj2004/blog/blob/main/src/assets/aliyun.png)
 
 ## 📄 许可证
 
