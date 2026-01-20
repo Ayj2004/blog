@@ -31,7 +31,7 @@
 <script setup lang="ts">
 import type { PropType } from "vue";
 
-// 定义Props
+// 定义Props并直接解构使用，避免props变量未读取
 const props = defineProps({
   // 所有分类列表
   categories: {
@@ -45,6 +45,9 @@ const props = defineProps({
     default: "all",
   },
 });
+
+// 解构props属性（核心：让TS检测到props被使用）
+const { categories, activeCategory } = props;
 
 // 定义事件
 const emit = defineEmits<{
