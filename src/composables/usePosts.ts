@@ -19,7 +19,7 @@ export const usePosts = () => {
     error.value = "";
   };
 
-  // 1. 获取所有文章列表（核心优化：字段兜底 + 日志调试）
+  // 1. 获取所有文章列表
   const fetchPosts = async (): Promise<KVResponse<Post[]>> => {
     loading.value = true;
     resetError();
@@ -29,29 +29,14 @@ export const usePosts = () => {
         throw new Error(`请求失败：${response.status} ${response.statusText}`);
       }
       const result: KVResponse<Post[]> = await response.json();
-
-      // 调试日志：打印原始返回数据（便于定位字段问题）
-      console.log("【usePosts】后端返回原始数据：", result);
-
       if (result.success) {
-        // 兜底处理：确保每个post的category/author有默认值，兼容字段缺失/拼写错误
+        // 兜底处理：确保列表中每个post的category/author有默认值
         posts.value = (result.data || []).map((post) => ({
           ...post,
-          author: post.author || post.Author || post.authur || "匿名作者", // 兼容大小写/拼写错误
-          category: post.category || post.Category || post.categroy || "未分类", // 兼容大小写/拼写错误
+          author: post.author || "匿名作者",
+          category: post.category || "未分类",
           summary: post.summary || post.excerpt || "",
-          // 强制触发Vue响应式更新（避免数据存在但渲染不更新）
-          id: post.id,
-          title: post.title,
-          cover: post.cover,
-          content: post.content,
-          createTime: post.createTime,
-          updateTime: post.updateTime,
         }));
-
-        // 调试日志：打印处理后的最终数据
-        console.log("【usePosts】处理后文章列表：", posts.value);
-
         return { success: true, data: posts.value };
       } else {
         const errMsg = result.error || "获取文章列表失败";
@@ -67,7 +52,7 @@ export const usePosts = () => {
     }
   };
 
-  // 2. 获取单篇文章详情（补充字段兜底）
+  // 2. 获取单篇文章详情
   const fetchPostById = async (id: string): Promise<KVResponse<Post>> => {
     if (!id || typeof id !== "string") {
       const errMsg = "文章ID格式错误（必须为非空字符串）";
@@ -83,18 +68,8 @@ export const usePosts = () => {
         throw new Error(`请求失败：${response.status} ${response.statusText}`);
       }
       const result: KVResponse<Post> = await response.json();
-
-      // 调试日志：打印单篇文章原始数据
-      console.log(`【usePosts】单篇文章(${id})原始数据：`, result);
-
       if (result.success) {
-        const post = result.data
-          ? {
-              ...result.data,
-              author: result.data.author || "匿名作者",
-              category: result.data.category || "未分类",
-            }
-          : undefined;
+        const post = result.data ?? undefined;
         return { success: true, data: post };
       } else {
         const errMsg = result.error || "获取文章详情失败";
@@ -110,19 +85,16 @@ export const usePosts = () => {
     }
   };
 
-  // 3. 新增/更新文章（强化参数校验）
+  // 3. 新增/更新文章
   const savePost = async (post: Post): Promise<KVResponse> => {
     const requiredFields = [
       "id",
       "title",
-      "author", // 新增：强制校验作者字段
-      "category", // 新增：强制校验分类字段
       "content",
       "createTime",
       "updateTime",
     ] as const;
     const emptyFields = requiredFields.filter((field) => !post[field]);
-
     if (emptyFields.length > 0) {
       const errMsg = `文章必填字段为空：${emptyFields.join(", ")}`;
       error.value = errMsg;
@@ -139,10 +111,6 @@ export const usePosts = () => {
         },
         body: JSON.stringify(post),
       });
-
-      // 调试日志：打印保存接口请求参数
-      console.log("【usePosts】保存文章请求参数：", post);
-
       if (!response.ok) {
         throw new Error(`请求失败：${response.status} ${response.statusText}`);
       }
