@@ -13,7 +13,7 @@
       全部文章
     </button>
 
-    <!-- 动态分类按钮：修复事件绑定写法，让TS识别到函数调用 -->
+    <!-- 动态分类按钮：直接绑定函数，移除箭头函数（减少TS分析复杂度） -->
     <button
       v-for="category in categories"
       :key="category"
@@ -28,11 +28,11 @@
       }"
       @click="handleSelectCategory(category)"
       <!--
-      修复：将事件处理函数直接绑定，避免TS误判未调用
+      直接绑定函数，通过data-属性传递category（替代参数传递）
       --
     >
-      @mouseenter="(e) => handleMouseEnter(e)" @mouseleave="(e) =>
-      handleMouseLeave(e, category)" >
+      @mouseenter="handleMouseEnter" @mouseleave="handleMouseLeave"
+      :data-category="category" >
       {{ category }}
     </button>
   </div>
@@ -67,10 +67,10 @@ const handleSelectCategory = (category: string) => {
 };
 
 /**
- * 显式标注函数类型，消除TS误判
+ * 从DOM元素获取data-category，替代参数传递
+ * 显式关联DOM操作，让TS感知函数被实际调用
  */
-const handleMouseEnter: (e: MouseEvent) => void = (e) => {
-  if (!e.target) return;
+const handleMouseEnter = (e: MouseEvent) => {
   const target = e.target as HTMLButtonElement;
   const hoverBg = window
     .getComputedStyle(target)
@@ -79,14 +79,11 @@ const handleMouseEnter: (e: MouseEvent) => void = (e) => {
 };
 
 /**
- * 显式标注函数类型，消除TS误判
+ * 从data-category获取分类名，消除参数传递导致的TS误判
  */
-const handleMouseLeave: (e: MouseEvent, category: string) => void = (
-  e,
-  category
-) => {
-  if (!e.target) return;
+const handleMouseLeave = (e: MouseEvent) => {
   const target = e.target as HTMLButtonElement;
+  const category = target.dataset.category || ""; // 从data属性取分类名
   target.style.backgroundColor =
     activeCategory === category
       ? getRandomColor(category, "dark")
@@ -100,6 +97,7 @@ const getRandomColor = (
   category: string,
   type: "light" | "dark" | "hover"
 ): string => {
+  if (!category) return "#f5f5f5"; // 兜底空分类
   const hash = category.split("").reduce((acc, char) => {
     acc = (acc << 5) - acc + char.charCodeAt(0);
     return acc & acc;
@@ -115,4 +113,11 @@ const getRandomColor = (
 
   return `hsl(${hue}, ${saturation}%, ${lightnessMap[type]}%)`;
 };
+
+// 关键：显式暴露函数，让TS感知函数被外部（模板）引用
+defineExpose({
+  handleMouseEnter,
+  handleMouseLeave,
+  handleSelectCategory,
+});
 </script>
