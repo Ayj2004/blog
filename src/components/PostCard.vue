@@ -9,7 +9,7 @@
       </div>
       <h3 class="text-xl font-bold mb-2 line-clamp-1">{{ post.title }}</h3>
       <p class="text-gray-600 mb-4 line-clamp-2">
-        {{ post.excerpt || post.summary || "暂无摘要" }}
+        {{ post.summary || post.excerpt || "暂无摘要" }}
       </p>
       <div class="flex justify-between items-center text-sm text-gray-500">
         <span>{{ post.author || "匿名作者" }}</span>

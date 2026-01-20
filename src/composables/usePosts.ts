@@ -30,7 +30,13 @@ export const usePosts = () => {
       }
       const result: KVResponse<Post[]> = await response.json();
       if (result.success) {
-        posts.value = result.data || [];
+        // 兜底处理：确保列表中每个post的category/author有默认值
+        posts.value = (result.data || []).map((post) => ({
+          ...post,
+          author: post.author || "匿名作者",
+          category: post.category || "未分类",
+          summary: post.summary || post.excerpt || "",
+        }));
         return { success: true, data: posts.value };
       } else {
         const errMsg = result.error || "获取文章列表失败";
@@ -110,7 +116,7 @@ export const usePosts = () => {
       }
       const result: KVResponse = await response.json();
       if (result.success) {
-        await fetchPosts(); // 重新拉取列表
+        await fetchPosts(); // 重新拉取列表（确保最新数据）
         return { success: true };
       } else {
         const errMsg = result.error || "保存文章失败";

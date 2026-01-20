@@ -67,7 +67,12 @@
             required
           ></textarea>
         </div>
-        <button type="submit" class="btn btn-primary">保存文章</button>
+        <button
+          type="submit"
+          class="px-6 py-2 bg-primary text-white rounded-md hover:bg-primary/90 transition-colors"
+        >
+          保存文章
+        </button>
       </form>
     </div>
   </Layout>
@@ -122,6 +127,9 @@ const handleSubmit = async () => {
   }
   // 补充摘要（取内容前100字）
   postForm.value.summary = postForm.value.content.slice(0, 100);
+  // 兜底：防止字段未定义导致展示异常
+  postForm.value.author = postForm.value.author || "匿名作者";
+  postForm.value.category = postForm.value.category || "未分类";
 
   // 调用保存接口
   const result = await savePost(postForm.value as Post);
