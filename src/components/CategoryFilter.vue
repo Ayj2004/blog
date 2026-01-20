@@ -35,7 +35,7 @@
 </template>
 
 <script setup lang="ts">
-import type { PropType, MouseEvent } from "vue";
+import type { PropType } from "vue"; // 仅保留必要的vue类型导入
 
 // 定义Props
 const props = defineProps({
@@ -63,12 +63,12 @@ const handleSelectCategory = (category: string) => {
 };
 
 /**
- * 修复TS报错：处理鼠标进入事件（类型断言 + 全局getComputedStyle）
+ * 修复TS报错：处理鼠标进入事件（使用全局MouseEvent，而非vue导出的）
  */
 const handleMouseEnter = (e: MouseEvent<HTMLButtonElement>) => {
-  // 1. 断言target是HTMLButtonElement，排除null
+  // 断言target是HTMLButtonElement，排除null
   const target = e.target as HTMLButtonElement;
-  // 2. 使用全局window.getComputedStyle（而非this）
+  // 使用全局window.getComputedStyle
   const hoverBg = window
     .getComputedStyle(target)
     .getPropertyValue("--hover-bg");
