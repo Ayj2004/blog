@@ -1,30 +1,116 @@
-vue-blog-system/
-├── index.html
-├── package.json
-├── vite.config.ts
-├── tsconfig.json
-├── tailwind.config.js
-├── postcss.config.js
-├── src/
-│ ├── main.ts
-│ ├── App.vue
-│ ├── index.css
-│ ├── router/
-│ │ └── index.ts // 路由配置
-│ ├── components/
-│ │ ├── Layout.vue // 全局布局（导航+页脚+内容区）
-│ │ ├── Navbar.vue // 导航栏
-│ │ ├── Footer.vue // 页脚
-│ │ ├── PostCard.vue // 文章卡片组件
-│ │ └── PostDetail.vue // 文章详情组件
-│ ├── composables/
-│ │ └── usePosts.ts // 文章数据逻辑（模拟接口）
-│ ├── types/
-│ │ └── index.ts // 类型定义
-│ └── views/
-│ ├── HomeView.vue // 首页（文章列表）
-│ └── DetailView.vue // 文章详情页
-└── public/
-├── favicon.ico
-└── assets/
-└── images/ // 可放文章封面图（示例用占位图）
+# VueBlog - 简约轻量的 Vue 博客系统
+
+VueBlog 是一款基于 Vue 3 + TypeScript + Vite 构建的轻量级博客前端应用，搭配阿里云 ESA 边缘函数实现数据的 KV 存储与接口服务，整体架构简洁、性能高效，支持文章的创建、编辑、查看、删除等核心功能。
+
+## ✨ 核心特性
+
+- 🚀 **技术栈先进**：Vue 3 + Composition API + TypeScript，类型安全，开发体验佳
+- 🎨 **UI 简洁美观**：基于 Tailwind CSS 构建响应式界面，适配多终端
+- ⚡ **边缘计算驱动**：依托阿里云 ESA 边缘函数实现接口服务，低延迟、高可用
+- 📝 **完整博客功能**：支持文章的增删改查、封面随机生成、摘要自动截取等
+- 🎯 **状态管理清晰**：基于 Composables 封装数据逻辑，代码复用性高
+
+## 📋 项目结构
+
+```
+src/
+├── components/       # 通用组件（布局、导航、卡片、按钮等）
+├── composables/      # 组合式函数（文章数据逻辑封装）
+├── router/           # 路由配置（首页、详情、创建、编辑页）
+├── types/            # 类型定义（Post、KVResponse 等）
+├── views/            # 页面视图（首页、详情、创建、编辑）
+├── main.ts           # 应用入口
+├── index.css         # 全局样式（Tailwind 引入 + 自定义主题）
+└── App.vue           # 根组件
+```
+
+## 🛠 环境准备
+
+1. 安装 Node.js（推荐 v16+）
+2. 安装依赖：
+
+```bash
+npm install
+# 或
+yarn install
+# 或
+pnpm install
+```
+
+## 🚀 本地运行
+
+```bash
+# 开发环境
+npm run dev
+
+# 构建生产包
+npm run build
+
+# 预览生产包
+npm run preview
+```
+
+## 🔌 接口配置
+
+项目依赖阿里云 ESA 边缘函数提供的 KV 存储接口，需在 `src/composables/usePosts.ts` 中修改边缘函数地址：
+
+```typescript
+const EDGE_FUNCTION_BASE_URL = "https://kv-test.4fa2a2a9.er.aliyun-esa.net";
+```
+
+## 📖 功能说明
+
+### 1. 首页
+
+- 加载并展示所有文章列表，支持加载状态、空状态、错误状态提示
+- 文章卡片展示封面、标题、摘要、作者、发布时间等信息
+- 空列表时提供「创建新文章」快捷入口
+
+### 2. 文章创建
+
+- 表单填写标题、作者、分类、内容等信息
+- 自动生成随机封面图（支持手动更换）
+- 自动截取内容前 100 字作为摘要
+- 表单校验，必填项为空时给出提示
+
+### 3. 文章详情
+
+- 展示文章完整信息（标题、分类、作者、发布/更新时间、封面、内容）
+- 提供「编辑文章」「删除文章」操作按钮
+- 文章不存在时给出提示并提供返回首页入口
+
+### 4. 文章编辑
+
+- 加载并回显原有文章数据
+- 支持修改标题、作者、分类、内容等信息
+- 保存修改后自动更新文章信息，并重定向至详情页
+
+## 🎨 样式说明
+
+- 基于 Tailwind CSS 实现样式开发，减少自定义 CSS 量
+- 自定义主题变量（主色调、背景色等），便于风格调整
+- 响应式布局，适配移动端、平板、桌面端
+
+## ⚠️ 声明
+
+本项目由阿里云 ESA 提供加速、计算和保护
+![阿里云ESA](./src/assets/aliyun.png)
+
+## 📄 许可证
+
+本项目基于 MIT 协议开源，可自由修改、分发和商用，需保留原作者声明。
+
+## 📞 问题反馈
+
+若使用过程中遇到问题，可通过以下方式反馈：
+
+1. 提交 Issue
+2. 联系边缘函数开发团队调试接口逻辑
+
+---
+
+### 补充说明
+
+- 边缘函数代码已适配 KV 存储的增删改查逻辑，需确保阿里云 ESA 控制台已配置对应的 KV 命名空间
+- 前端请求已处理跨域、加载状态、错误捕获等边界情况，保障用户体验
+- 可根据实际需求扩展功能（如分类筛选、搜索、用户登录等）
